@@ -14,6 +14,7 @@ import time
 import ctypes
 import random
 import getpass
+import win32api
 import calendar
 import threading
 import tkinter.ttk
@@ -33,7 +34,7 @@ import tkinter.filedialog as file
 
 class DatePlan(tkinter.Tk):
     def __init__(self):
-        super().__init__(className='任务计划器v2')
+        super().__init__(className='任务计划器v3')
         now = time.localtime(time.time())
         self.year = now.tm_year
         self.month = now.tm_mon
@@ -68,6 +69,7 @@ class DatePlan(tkinter.Tk):
         self.q = False
         self.music = False
         self.player = True
+        self.flag = True
         self.tab = tkinter.ttk.Notebook(self)
         self.frame3 = tkinter.Frame(self.tab)
         self.frame4 = tkinter.Frame(self.tab)
@@ -158,7 +160,9 @@ class DatePlan(tkinter.Tk):
         self.button7 = tkinter.Button(self.frame4, text='删除日程', bg='red', command=self.delete_data)
         self.button7.place(x=160, y=260, height=40, width=200)
 
-        self.geometry('420x340')
+        self.tab.bind("<Map>", self.map)
+        self.tab.bind("<Unmap>", self.unmap)
+
         self.resizable(0, 0)
         self.mainloop()
 
@@ -334,6 +338,21 @@ class DatePlan(tkinter.Tk):
             open('/'.join(str(__file__).replace("\\", '/').split('/')[:-1] + ['task.json']), 'w', encoding='utf-8').write(str(all_data))
             self.read()
 
+    def key(self):
+        while 1:
+            if win32api.GetAsyncKeyState(118):
+                self.map(1)
+                break
+            time.sleep(1)
+
+    def map(self, e):
+        if e:
+            # print('最大化')
+            self.overrideredirect(0)
+            self.title('任务计划器v3')
+            self.geometry(f'420x340+{int((self.winfo_screenwidth()-420-16)/2)}+{int((self.winfo_screenheight()-340-32)/2)}')
+            self.deiconify()
+
     def move(self, m: int):
         # now = time.localtime(time.time())
         self.month = m
@@ -482,9 +501,9 @@ class DatePlan(tkinter.Tk):
                     ctypes.windll.user32.PostMessageA(hwnd, WM_APPCOMMAND, 0, APPCOMMAND_VOLUME_MUTE * 0x10000)
                     break
         except UnicodeDecodeError:
-            msg.showerror(title='ERROR', message='路径或文件名可能含有中文, 或是文件的实际格式不是mp3或mav！')
+            msg.showerror(title='错误！', message='路径或文件名可能含有中文, 或是文件的实际格式不是mp3或mav！')
         except OSError:
-            msg.showerror(title='ERROR', message='路径或文件名可能含有中文, 或是文件的实际格式不是mp3或mav！')
+            msg.showerror(title='错误！', message='路径或文件名可能含有中文, 或是文件的实际格式不是mp3或mav！')
 
     def read(self):
         self.listbox.delete(0, tkinter.END)
@@ -551,6 +570,17 @@ class DatePlan(tkinter.Tk):
             self.wm_attributes('-topmost', 1)
         else:
             self.wm_attributes('-topmost', 0)
+
+    def unmap(self, e):
+        if self.flag:
+            msg.showinfo(title='提示', message='恢复窗口请在左下角找到标题并双击（可以拖动）或者按 F7')
+        self.flag = False
+        if e:
+            # print('最小化')
+            self.title('双击最大化')
+            self.overrideredirect(1)
+            self.geometry(f'0x0')
+            self.threads(self.key)
 
     @staticmethod
     def win_command(*command):
