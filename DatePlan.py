@@ -34,7 +34,7 @@ import tkinter.filedialog as file
 
 class DatePlan(tkinter.Tk):
     def __init__(self):
-        super().__init__(className='任务计划器v5')
+        super().__init__(className='任务计划器v6')
         now = time.localtime(time.time())
         self.year = now.tm_year
         self.month = now.tm_mon
@@ -52,6 +52,7 @@ class DatePlan(tkinter.Tk):
         self.weekly = tkinter.IntVar()
         self.start = tkinter.IntVar()
         self.window = tkinter.IntVar()
+        self.dei = tkinter.IntVar()
         if self.task_init()[0]:
             self.window.set(1)
         self.set1 = tkinter.IntVar()
@@ -72,6 +73,7 @@ class DatePlan(tkinter.Tk):
         self.music = False
         self.player = True
         self.flag = True
+        self.de = True
         self.tab = tkinter.ttk.Notebook(self)
         self.frame3 = tkinter.Frame(self.tab)
         self.frame4 = tkinter.Frame(self.tab)
@@ -108,8 +110,10 @@ class DatePlan(tkinter.Tk):
         self.checkbutton3.place(x=250, y=175, height=20, width=80)
         self.checkbutton4 = tkinter.Checkbutton(self.frame3, text='启用周重复', onvalue=1, offvalue=0, variable=self.weekly, command=lambda: self.check('w'))
         self.checkbutton4.place(x=335, y=175, height=20, width=80)
-        self.checkbutton5 = tkinter.Checkbutton(self.frame3, text='复制文件到开机目录', onvalue=1, offvalue=0, variable=self.start, command=lambda: self.check('s'))
-        self.checkbutton5.place(x=250, y=195, height=20, width=128)
+        self.checkbutton5 = tkinter.Checkbutton(self.frame3, text='仅按键唤醒', onvalue=1, offvalue=0, variable=self.dei, command=lambda: self.check('o'))
+        self.checkbutton5.place(x=250, y=195, height=20, width=80)
+        self.checkbutton5 = tkinter.Checkbutton(self.frame3, text='开机自启', onvalue=1, offvalue=0, variable=self.start, command=lambda: self.check('s'))
+        self.checkbutton5.place(x=335, y=195, height=20, width=80)
         self.checkbutton4 = tkinter.Checkbutton(self.frame3, text='窗口置顶', onvalue=1, offvalue=0, variable=self.window, command=self.top)
         self.checkbutton4.place(x=335, y=220, height=25, width=80)
         self.button1 = tkinter.Button(self.frame3, text='回到今日', bg='yellow', command=self.back)
@@ -234,6 +238,8 @@ class DatePlan(tkinter.Tk):
                 self.set1.set(0)
                 self.set2.set(0)
                 self.set3.set(0)
+        elif t == 'o':
+            self.flag = True
         elif t == 's':
             # 全部启动路径：C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp
             # 当前用户启动路径：C:\Users\19305\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup
@@ -366,12 +372,14 @@ class DatePlan(tkinter.Tk):
             time.sleep(1)
 
     def map(self, e):
-        if e:
+        if e and self.de:
             # print('最大化')
             self.overrideredirect(0)
-            self.title('任务计划器v5')
+            self.title('任务计划器v6')
             self.geometry(f'420x340+{int((self.winfo_screenwidth()-420-16)/2)}+{int((self.winfo_screenheight()-340-32)/2)}')
             self.deiconify()
+        else:
+            self.de = True
 
     def move(self, m: int):
         # now = time.localtime(time.time())
@@ -510,6 +518,7 @@ class DatePlan(tkinter.Tk):
         self.set4.set(0)
         self.entry6.delete(0, tkinter.END)
         self.button6.configure(text='选择音频文件（英文路径+英文名称）', bg='skyblue')
+        self.index = 0
         for n in range(1, len(json)):
             self.events_obj[json[n]['time']] = json[n]
             self.listbox.insert(tkinter.END, json[n]['time'])
@@ -596,14 +605,19 @@ class DatePlan(tkinter.Tk):
 
     def unmap(self, e):
         if self.flag:
-            msg.showinfo(title='提示', message='恢复窗口请在左下角找到标题并双击（可以拖动）或者按 F7')
+            if self.dei.get():
+                msg.showinfo(title='提示', message='恢复窗口请按 F7')
+            else:
+                msg.showinfo(title='提示', message='恢复窗口请在左下角找到标题并双击（可以拖动）或者按 F7')
         self.flag = False
         if e:
             # print('最小化')
-            # self.deiconify()  # 启用此命令将不会出现左下角的双击最大化，只能通过热键激活窗口！
+            if self.dei.get():
+                self.de = False
+                self.deiconify()  # 启用此命令将不会出现左下角的双击最大化，只能通过热键激活窗口！
             self.title('双击最大化')
             self.overrideredirect(1)
-            self.geometry(f'0x0')
+            self.geometry('0x0')
             self.threads(self.key)
 
     @staticmethod
