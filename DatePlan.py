@@ -16,6 +16,7 @@ import random
 import getpass
 import win32api
 import calendar
+import _tkinter
 import threading
 import tkinter.ttk
 from itertools import chain
@@ -34,7 +35,7 @@ import tkinter.filedialog as file
 
 class DatePlan(tkinter.Tk):
     def __init__(self):
-        super().__init__(className='任务计划器v6')
+        super().__init__(className='任务计划器v6.6')
         now = time.localtime(time.time())
         self.year = now.tm_year
         self.month = now.tm_mon
@@ -169,6 +170,11 @@ class DatePlan(tkinter.Tk):
         self.tab.bind("<Map>", self.map)
         self.tab.bind("<Unmap>", self.unmap)
 
+        try:
+            self.protocol("WM_DELETE_WINDOW", self.close)
+        except _tkinter.TclError:
+            pass
+
         self.resizable(0, 0)
         self.mainloop()
 
@@ -271,6 +277,16 @@ class DatePlan(tkinter.Tk):
                 #     os.remove(f'{path}/DatePlan.pyw')
                 # if os.path.isfile(f'{path}/task.json'):
                 #     os.remove(f'{path}/task.json')
+
+    def close(self):
+        dic = self.task_init()
+        now = time.localtime(time.time())
+        for num in dic:
+            if num and '-'.join(dic[num]['time'].split('-')[:3]) == f'{now.tm_year}-{now.tm_mon}-{now.tm_mday}':
+                if not tkinter.messagebox.askyesno(title='提示', message='今天你有计划任务哦，是否继续关闭？'):
+                    return
+        self.destroy()
+        self.quit()
 
     def contact_method(self, event):
         if event:
@@ -375,7 +391,7 @@ class DatePlan(tkinter.Tk):
         if e and self.de:
             # print('最大化')
             self.overrideredirect(0)
-            self.title('任务计划器v6')
+            self.title('任务计划器v6.6')
             self.geometry(f'420x340+{int((self.winfo_screenwidth()-420-16)/2)}+{int((self.winfo_screenheight()-340-32)/2)}')
             self.deiconify()
         else:
