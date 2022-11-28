@@ -19,7 +19,7 @@ import calendar
 import threading
 import tkinter.ttk
 from itertools import chain
-# import win32com.client as client
+import win32com.client as client
 import tkinter.messagebox as msg
 import tkinter.filedialog as file
 
@@ -34,7 +34,7 @@ import tkinter.filedialog as file
 
 class DatePlan(tkinter.Tk):
     def __init__(self):
-        super().__init__(className='任务计划器v3')
+        super().__init__(className='任务计划器v4')
         now = time.localtime(time.time())
         self.year = now.tm_year
         self.month = now.tm_mon
@@ -56,9 +56,8 @@ class DatePlan(tkinter.Tk):
         self.set2 = tkinter.IntVar()
         self.set3 = tkinter.IntVar()
         self.set4 = tkinter.IntVar()
-        file_name = str(__file__).replace("\\", '/').split("/")
         path = f'C:/Users/{getpass.getuser()}/AppData/Roaming/Microsoft/Windows/Start Menu/Programs/Startup'
-        if os.path.isfile(f'{"/".join(file_name[:-1]+["start.bat"])}') and os.path.isfile(f'{path}/s.vbs'):
+        if os.path.isfile(f'{path}/DatePlan.exe.lnk'):
             self.start.set(1)
         self.days_index = -1
         self.months_index = -1
@@ -238,26 +237,26 @@ class DatePlan(tkinter.Tk):
             path = f'C:/Users/{getpass.getuser()}/AppData/Roaming/Microsoft/Windows/Start Menu/Programs/Startup'
             # file_name = f'{path}/y{self.year}-m{self.month}-d{self.day}-h{self.hour}-m{self.minute}.py'
             if self.start.get():
-                file_name = str(__file__).replace("\\", '/').split("/")
-                open(f'{"/".join(file_name[:-1]+["start.bat"])}', 'w', encoding='utf-8').write(f'pythonw {__file__}')
+                # file_name = str(__file__).replace("\\", '/').split("/")
+                # open(f'{"/".join(file_name[:-1]+["start.bat"])}', 'w', encoding='utf-8').write(f'pythonw {__file__}')
                 # open(f'start.bat', 'w', encoding='utf-8').write(f'for /F %p in (\'pwd\') do pythonw %p\\{file_name[-1]}')
-                open(f'{path}/s.vbs', 'w', encoding='utf-8').write(f'DIM objShell\nset objShell=wscript.createObject("wscript.shell")\niReturn=objShell.Run("cmd.exe /C {"/".join(file_name[:-1])}/start.bat", 0, TRUE)')
+                # open(f'{path}/s.vbs', 'w', encoding='utf-8').write(f'DIM objShell\nset objShell=wscript.createObject("wscript.shell")\niReturn=objShell.Run("cmd.exe /C {"/".join(file_name[:-1])}/start.bat", 0, TRUE)')
                 # 创建快捷方式
-                # shell = client.Dispatch("WScript.Shell")
-                # shortcut = shell.CreateShortCut(f'{path}/dp.lnk')
-                # shortcut.TargetPath = __file__
-                # shortcut.save()
+                shell = client.Dispatch("WScript.Shell")
+                shortcut = shell.CreateShortCut(f'{path}/DatePlan.exe.lnk')
+                shortcut.TargetPath = sys.argv[0]
+                shortcut.save()
                 # 复制文件
                 # open(f'{path}/DatePlan.pyw', 'w', encoding='utf-8').write(open(__file__, 'r', encoding='utf-8').read())
                 # open(f'{path}/task.json', 'w', encoding='utf-8').write(open('/'.join(str(__file__).replace("\\), '/.split('/')[:-1]+['task.json']), 'r', encoding='utf-8').read())
             else:
-                if os.path.isfile(f'start.bat'):
-                    os.remove(f'start.bat')
-                if os.path.isfile(f'{path}/s.vbs'):
-                    os.remove(f'{path}/s.vbs')
+                # if os.path.isfile(f'start.bat'):
+                #     os.remove(f'start.bat')
+                # if os.path.isfile(f'{path}/s.vbs'):
+                #     os.remove(f'{path}/s.vbs')
                 # 删除快捷方式
-                # if os.path.isfile(f'{path}/dp.link'):
-                #     os.remove(f'{path}/dp.link')
+                if os.path.isfile(f'{path}/DatePlan.exe.lnk'):
+                    os.remove(f'{path}/DatePlan.exe.lnk')
                 # 删除文件
                 # if os.path.isfile(f'{path}/DatePlan.pyw'):
                 #     os.remove(f'{path}/DatePlan.pyw')
@@ -276,7 +275,9 @@ class DatePlan(tkinter.Tk):
             self.entry6.delete(0, tkinter.END)
             self.entry6.insert(tkinter.END, self.events_obj[self.index]['volume'])
             if self.events_obj[self.index]['music']:
-                self.button6.configure(text=self.events_obj[self.index]['music'])
+                self.button6.configure(text=self.events_obj[self.index]['music'], bg='green')
+            else:
+                self.button6.configure(text='选择音频文件（英文路径+英文名称）', bg='skyblue')
 
     def date_calc(self, y: int, m: int):
         now = time.localtime(time.time())
@@ -328,15 +329,30 @@ class DatePlan(tkinter.Tk):
 
     def delete_data(self):
         if self.index and msg.askyesno(title='注意！', message=f'您正在删除日程 {self.index}，是否继续？'):
-            all_data = eval(open('/'.join(str(__file__).replace("\\", '/').split('/')[:-1] + ['task.json']), 'r', encoding='utf-8').read().replace(' ', ''))
+            all_data = eval(open(f'{os.path.dirname(os.path.realpath(sys.argv[0]))}\\task.json', 'r', encoding='utf-8').read().replace(' ', ''))
             add = False
             for n in range(1, len(all_data)):
                 if n in all_data and (all_data[n]['time'] == self.index or add):
                     all_data[n] = all_data[n+1]
                     add = True
             del all_data[len(all_data)]
-            open('/'.join(str(__file__).replace("\\", '/').split('/')[:-1] + ['task.json']), 'w', encoding='utf-8').write(str(all_data))
+            self.entry5.delete(0, tkinter.END)
+            self.set1.set(0)
+            self.set2.set(0)
+            self.set3.set(0)
+            self.set4.set(0)
+            self.entry6.delete(0, tkinter.END)
+            self.button6.configure(text='选择音频文件（英文路径+英文名称）', bg='skyblue')
+            open(f'{os.path.dirname(os.path.realpath(sys.argv[0]))}\\task.json', 'w', encoding='utf-8').write(str(all_data))
             self.read()
+
+    @staticmethod
+    def get_week_day(y: int, m: int, d: int):
+        data = []
+        for w in iter([(d[0], d[1]) for d in w] for w in calendar.TextCalendar().monthdays2calendar(y, m)):
+            data += w
+        date = {d[0]: d[1] for d in data}
+        return date[d]
 
     def key(self):
         while 1:
@@ -349,7 +365,7 @@ class DatePlan(tkinter.Tk):
         if e:
             # print('最大化')
             self.overrideredirect(0)
-            self.title('任务计划器v3')
+            self.title('任务计划器v4')
             self.geometry(f'420x340+{int((self.winfo_screenwidth()-420-16)/2)}+{int((self.winfo_screenheight()-340-32)/2)}')
             self.deiconify()
 
@@ -403,83 +419,46 @@ class DatePlan(tkinter.Tk):
     def plan(self, **t):
         while not self.q:
             now = time.localtime(time.time())
-            if t['time'].split('-')[2] in self.titles:
-                if t['weekly'] and now.tm_wday == self.titles.index(t['time'].split('-')[2]) and now.tm_hour == int(t['time'].split('-')[3]) \
-                        and now.tm_min == int(t['time'].split('-')[4]):
+            times = t['time'].split('-')
+            # print(times)
+            if t['daily']:
+                if now.tm_hour == int(times[3]) and now.tm_min == int(times[4]):
                     self.threads(self.mp3_play, t['music'], t['volume'])
                     if str(msg.showinfo(title='时间到！', message=t['task_msg'])) == 'ok':
                         self.player = False
                     break
-                elif now.tm_year > int(t['time'].split('-')[0]):
+            elif t['weekly']:
+                if now.tm_wday == self.get_week_day(now.tm_year, now.tm_mon, int(times[2])) and now.tm_hour == int(times[3]) and now.tm_min == int(times[4]):
+                    self.threads(self.mp3_play, t['music'], t['volume'])
+                    if str(msg.showinfo(title='时间到！', message=t['task_msg'])) == 'ok':
+                        self.player = False
                     break
-                elif now.tm_year == int(t['time'].split('-')[0]) and now.tm_mon > int(t['time'].split('-')[1]):
-                    break
-                elif now.tm_mon == int(t['time'].split('-')[1]) and now.tm_wday > self.titles.index(t['time'].replace("\\", '/').split('-')[2]):
-                    break
-                elif now.tm_wday == self.titles.index(t['time'].replace("\\", '/').split('-')[2]) and now.tm_hour > int(t['time'].split('-')[3]):
-                    break
-                elif now.tm_hour == int(t['time'].split('-')[3]) and now.tm_min > int(t['time'].split('-')[4]):
-                    break
-                else:
-                    if t['yea_con'] and now.tm_year <= int(t['time'].split('-')[0]) and self.titles[now.tm_wday] == t['time'].replace("\\", '/').split('-')[2]:
-                        if now.tm_hour == int(t['time'].split('-')[3]) and now.tm_min == int(t['time'].split('-')[4]):
-                            self.threads(self.mp3_play, t['music'], t['volume'])
-                            if str(msg.showinfo(title='时间到！', message=t['task_msg'])) == 'ok':
-                                self.player = False
-                            break
-                    elif t['mon_con'] and now.tm_mon <= int(t['time'].split('-')[1]) and self.titles[now.tm_wday] == t['time'].replace("\\", '/').split('-')[2]:
-                        if now.tm_hour == int(t['time'].split('-')[3]) and now.tm_min == int(t['time'].split('-')[4]):
-                            self.threads(self.mp3_play, t['music'], t['volume'])
-                            if str(msg.showinfo(title='时间到！', message=t['task_msg'])) == 'ok':
-                                self.player = False
-                            break
-                    else:
-                        if now.tm_hour == int(t['time'].split('-')[3]) and now.tm_min == int(t['time'].split('-')[4]):
-                            self.threads(self.mp3_play, t['music'], t['volume'])
-                            if str(msg.showinfo(title='时间到！', message=t['task_msg'])) == 'ok':
-                                self.player = False
-                            break
             else:
-                if t['weekly'] and now.tm_wday == self.titles.index(t['time'].split('-')[2]) and now.tm_hour == int(t['time'].split('-')[3]) \
-                        and now.tm_min == int(t['time'].split('-')[4]):
-                    self.threads(self.mp3_play, t['music'], t['volume'])
-                    if str(msg.showinfo(title='时间到！', message=t['task_msg'])) == 'ok':
-                        self.player = False
-                    break
-                elif t['daily'] and now.tm_hour == int(t['time'].split('-')[3]) and now.tm_min == int(t['time'].split('-')[4]):
-                    self.threads(self.mp3_play, t['music'], t['volume'])
-                    if str(msg.showinfo(title='时间到！', message=t['task_msg'])) == 'ok':
-                        self.player = False
-                    break
-                elif now.tm_year > int(t['time'].split('-')[0]):
-                    break
-                elif now.tm_year == int(t['time'].split('-')[0]) and now.tm_mon > int(t['time'].split('-')[1]):
-                    break
-                elif now.tm_mon == int(t['time'].split('-')[1]) and now.tm_mday > int(t['time'].split('-')[2]):
-                    break
-                elif now.tm_mday == int(t['time'].split('-')[2]) and now.tm_hour > int(t['time'].split('-')[3]):
-                    break
-                elif now.tm_hour == int(t['time'].split('-')[3]) and now.tm_min > int(t['time'].split('-')[4]):
-                    break
-                else:
-                    if t['yea_con'] and now.tm_year <= int(t['time'].split('-')[0]) and now.tm_mday == int(t['time'].split('-')[2]):
-                        if now.tm_hour == int(t['time'].split('-')[3]) and now.tm_min == int(t['time'].split('-')[4]):
+                if times[2].isdigit():
+                    if t['mon_con']:
+                        if now.tm_mday == int(times[2]) and now.tm_hour == int(times[3]) and now.tm_min == int(times[4]):
                             self.threads(self.mp3_play, t['music'], t['volume'])
                             if str(msg.showinfo(title='时间到！', message=t['task_msg'])) == 'ok':
                                 self.player = False
                             break
-                    elif t['mon_con'] and now.tm_mon <= int(t['time'].split('-')[1]) and now.tm_mday == int(t['time'].split('-')[2]):
-                        if now.tm_hour == int(t['time'].split('-')[3]) and now.tm_min == int(t['time'].split('-')[4]):
+                    elif t['yea_con']:
+                        if now.tm_mon == int(times[1]) and now.tm_mday == int(times[2]) and now.tm_hour == int(times[3]) and now.tm_min == int(times[4]):
                             self.threads(self.mp3_play, t['music'], t['volume'])
                             if str(msg.showinfo(title='时间到！', message=t['task_msg'])) == 'ok':
                                 self.player = False
                             break
                     else:
-                        if now.tm_hour == int(t['time'].split('-')[3]) and now.tm_min == int(t['time'].split('-')[4]):
+                        if now.tm_year == int(times[0]) and now.tm_mon == int(times[1]) and now.tm_mday == int(times[2]) and now.tm_hour == int(times[3]) and now.tm_min == int(times[4]):
                             self.threads(self.mp3_play, t['music'], t['volume'])
                             if str(msg.showinfo(title='时间到！', message=t['task_msg'])) == 'ok':
                                 self.player = False
                             break
+                else:
+                    if now.tm_year == int(times[0]) and now.tm_mon == int(times[1]) and now.tm_wday == self.titles.index(times[2]) and now.tm_hour == int(times[3]) and now.tm_min == int(times[4]):
+                        self.threads(self.mp3_play, t['music'], t['volume'])
+                        if str(msg.showinfo(title='时间到！', message=t['task_msg'])) == 'ok':
+                            self.player = False
+                        break
             time.sleep(1)
 
     def playsound(self, sound, block=False):
@@ -507,7 +486,14 @@ class DatePlan(tkinter.Tk):
 
     def read(self):
         self.listbox.delete(0, tkinter.END)
-        json = eval(open('/'.join(str(__file__).replace("\\", '/').split('/')[:-1]+['task.json']), 'r', encoding='utf-8').read())
+        json = eval(open(f'{os.path.dirname(os.path.realpath(sys.argv[0]))}\\task.json', 'r', encoding='utf-8').read())
+        self.entry5.delete(0, tkinter.END)
+        self.set1.set(0)
+        self.set2.set(0)
+        self.set3.set(0)
+        self.set4.set(0)
+        self.entry6.delete(0, tkinter.END)
+        self.button6.configure(text='选择音频文件（英文路径+英文名称）', bg='skyblue')
         for n in range(1, len(json)+1):
             self.events_obj[json[n]['time']] = json[n]
             self.listbox.insert(tkinter.END, json[n]['time'])
@@ -524,7 +510,7 @@ class DatePlan(tkinter.Tk):
                     text = f'计划任务来喽！现在的时间是：{self.year}年{self.month}月{self.day}日{self.hour}时{self.minute}分。'
                     if self.entry3.get():
                         text = self.entry3.get()
-                    all_data = eval(open('/'.join(str(__file__).replace("\\", '/').split('/')[:-1]+['task.json']), 'r', encoding='utf-8').read().replace(' ', ''))
+                    all_data = eval(open(f'{os.path.dirname(os.path.realpath(sys.argv[0]))}\\task.json', 'r', encoding='utf-8').read().replace(' ', ''))
                     for n in range(1, len(all_data)+1):
                         if all_data[n]['time'] == f'{self.year}-{self.month}-{self.day}-{self.hour}-{self.minute}':
                             del all_data[n]
@@ -535,7 +521,7 @@ class DatePlan(tkinter.Tk):
                     while n in all_data:
                         n += 1
                     all_data[n] = data
-                    open('/'.join(str(__file__).replace("\\", '/').split('/')[:-1]+['task.json']), 'w', encoding='utf-8').write(str(all_data))
+                    open(f'{os.path.dirname(os.path.realpath(sys.argv[0]))}\\task.json', 'w', encoding='utf-8').write(str(all_data))
             except ValueError:
                 msg.showerror(title='警告！', message='请输入正确的内容！')
         else:
@@ -544,7 +530,7 @@ class DatePlan(tkinter.Tk):
     def target(self):
         old = None
         while 1:
-            tasks = eval(open('/'.join(str(__file__).replace("\\", '/').split('/')[:-1]+['task.json']), 'r', encoding='utf-8').read())
+            tasks = eval(open(f'{os.path.dirname(os.path.realpath(sys.argv[0]))}\\task.json', 'r', encoding='utf-8').read())
             tasks_time_list = []
             for n in tasks:
                 tasks_time_list.append(tasks[n])
@@ -577,6 +563,7 @@ class DatePlan(tkinter.Tk):
         self.flag = False
         if e:
             # print('最小化')
+            # self.deiconify()  # 启用此命令将不会出现左下角的双击最大化，只能通过热键激活窗口！
             self.title('双击最大化')
             self.overrideredirect(1)
             self.geometry(f'0x0')
@@ -599,7 +586,7 @@ class DatePlan(tkinter.Tk):
     def write(self):
         if self.index:
             now = time.localtime(time.time())
-            all_data = eval(open('/'.join(str(__file__).replace("\\", '/').split('/')[:-1] + ['task.json']), 'r', encoding='utf-8').read().replace(' ', ''))
+            all_data = eval(open(f'{os.path.dirname(os.path.realpath(sys.argv[0]))}\\task.json', 'r', encoding='utf-8').read().replace(' ', ''))
             text = self.entry5.get() and self.entry5.get() or '计划任务来喽！现在的时间是：{}年{}月{}日{}时{}分。'.format(*self.index.split('-'))
             for n in range(1, len(all_data)+1):
                 if all_data[n]['time'] == self.index:
@@ -611,13 +598,13 @@ class DatePlan(tkinter.Tk):
                     all_data[n]['music'] = self.music
                     all_data[n]['volume'] = str(self.entry6.get()).isdigit() and int(self.entry6.get()) or 20
                     all_data[n]['made_time'] = f'{now.tm_year}-{now.tm_mon}-{now.tm_mday}-{now.tm_hour}-{now.tm_min}'
-            open('/'.join(str(__file__).replace("\\", '/').split('/')[:-1] + ['task.json']), 'w', encoding='utf-8').write(str(all_data))
+            open(f'{os.path.dirname(os.path.realpath(sys.argv[0]))}\\task.json', 'w', encoding='utf-8').write(str(all_data))
             msg.showinfo(title='完成！', message='写入成功！')
 
 
 if __name__ == '__main__':
     init = 0  # 清空计划任务标志变量
-    if not os.path.isfile('/'.join(str(__file__).replace("\\", '/').split('/')[:-1]+['task.json'])) or init:
-        open('/'.join(str(__file__).replace("\\", '/').split('/')[:-1]+['task.json']), 'w', encoding='utf-8').write('{}')  # 清空计划任务 && 初始化文件
+    if not os.path.isfile(f'{os.path.dirname(os.path.realpath(sys.argv[0]))}\\task.json') or init:
+        open(f'{os.path.dirname(os.path.realpath(sys.argv[0]))}\\task.json', 'w', encoding='utf-8').write('{}')  # 清空计划任务 && 初始化文件
     if not init:
         DatePlan()
