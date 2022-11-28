@@ -34,7 +34,7 @@ import tkinter.filedialog as file
 
 class DatePlan(tkinter.Tk):
     def __init__(self):
-        super().__init__(className='任务计划器v4')
+        super().__init__(className='任务计划器v5')
         now = time.localtime(time.time())
         self.year = now.tm_year
         self.month = now.tm_mon
@@ -52,6 +52,8 @@ class DatePlan(tkinter.Tk):
         self.weekly = tkinter.IntVar()
         self.start = tkinter.IntVar()
         self.window = tkinter.IntVar()
+        if self.task_init()[0]:
+            self.window.set(1)
         self.set1 = tkinter.IntVar()
         self.set2 = tkinter.IntVar()
         self.set3 = tkinter.IntVar()
@@ -59,6 +61,7 @@ class DatePlan(tkinter.Tk):
         path = f'C:/Users/{getpass.getuser()}/AppData/Roaming/Microsoft/Windows/Start Menu/Programs/Startup'
         if os.path.isfile(f'{path}/DatePlan.exe.lnk'):
             self.start.set(1)
+            self.top()
         self.days_index = -1
         self.months_index = -1
         self.days_obj = []
@@ -329,13 +332,14 @@ class DatePlan(tkinter.Tk):
 
     def delete_data(self):
         if self.index and msg.askyesno(title='注意！', message=f'您正在删除日程 {self.index}，是否继续？'):
-            all_data = eval(open(f'{os.path.dirname(os.path.realpath(sys.argv[0]))}\\task.json', 'r', encoding='utf-8').read().replace(' ', ''))
+            all_data = self.task_init()
             add = False
             for n in range(1, len(all_data)):
                 if n in all_data and (all_data[n]['time'] == self.index or add):
-                    all_data[n] = all_data[n+1]
+                    if n+1 in all_data:
+                        all_data[n] = all_data[n+1]
                     add = True
-            del all_data[len(all_data)]
+            del all_data[len(all_data)-1]
             self.entry5.delete(0, tkinter.END)
             self.set1.set(0)
             self.set2.set(0)
@@ -365,7 +369,7 @@ class DatePlan(tkinter.Tk):
         if e:
             # print('最大化')
             self.overrideredirect(0)
-            self.title('任务计划器v4')
+            self.title('任务计划器v5')
             self.geometry(f'420x340+{int((self.winfo_screenwidth()-420-16)/2)}+{int((self.winfo_screenheight()-340-32)/2)}')
             self.deiconify()
 
@@ -424,40 +428,52 @@ class DatePlan(tkinter.Tk):
             if t['daily']:
                 if now.tm_hour == int(times[3]) and now.tm_min == int(times[4]):
                     self.threads(self.mp3_play, t['music'], t['volume'])
+                    self.wm_attributes('-topmost', 1)
                     if str(msg.showinfo(title='时间到！', message=t['task_msg'])) == 'ok':
                         self.player = False
+                    self.wm_attributes('-topmost', self.window.get())
                     break
             elif t['weekly']:
                 if now.tm_wday == self.get_week_day(now.tm_year, now.tm_mon, int(times[2])) and now.tm_hour == int(times[3]) and now.tm_min == int(times[4]):
                     self.threads(self.mp3_play, t['music'], t['volume'])
+                    self.wm_attributes('-topmost', 1)
                     if str(msg.showinfo(title='时间到！', message=t['task_msg'])) == 'ok':
                         self.player = False
+                    self.wm_attributes('-topmost', self.window.get())
                     break
             else:
                 if times[2].isdigit():
                     if t['mon_con']:
                         if now.tm_mday == int(times[2]) and now.tm_hour == int(times[3]) and now.tm_min == int(times[4]):
                             self.threads(self.mp3_play, t['music'], t['volume'])
+                            self.wm_attributes('-topmost', 1)
                             if str(msg.showinfo(title='时间到！', message=t['task_msg'])) == 'ok':
                                 self.player = False
+                            self.wm_attributes('-topmost', self.window.get())
                             break
                     elif t['yea_con']:
                         if now.tm_mon == int(times[1]) and now.tm_mday == int(times[2]) and now.tm_hour == int(times[3]) and now.tm_min == int(times[4]):
                             self.threads(self.mp3_play, t['music'], t['volume'])
+                            self.wm_attributes('-topmost', 1)
                             if str(msg.showinfo(title='时间到！', message=t['task_msg'])) == 'ok':
                                 self.player = False
+                            self.wm_attributes('-topmost', self.window.get())
                             break
                     else:
                         if now.tm_year == int(times[0]) and now.tm_mon == int(times[1]) and now.tm_mday == int(times[2]) and now.tm_hour == int(times[3]) and now.tm_min == int(times[4]):
                             self.threads(self.mp3_play, t['music'], t['volume'])
+                            self.wm_attributes('-topmost', 1)
                             if str(msg.showinfo(title='时间到！', message=t['task_msg'])) == 'ok':
                                 self.player = False
+                            self.wm_attributes('-topmost', self.window.get())
                             break
                 else:
                     if now.tm_year == int(times[0]) and now.tm_mon == int(times[1]) and now.tm_wday == self.titles.index(times[2]) and now.tm_hour == int(times[3]) and now.tm_min == int(times[4]):
                         self.threads(self.mp3_play, t['music'], t['volume'])
+                        self.wm_attributes('-topmost', 1)
                         if str(msg.showinfo(title='时间到！', message=t['task_msg'])) == 'ok':
                             self.player = False
+                        self.wm_attributes('-topmost', self.window.get())
                         break
             time.sleep(1)
 
@@ -486,7 +502,7 @@ class DatePlan(tkinter.Tk):
 
     def read(self):
         self.listbox.delete(0, tkinter.END)
-        json = eval(open(f'{os.path.dirname(os.path.realpath(sys.argv[0]))}\\task.json', 'r', encoding='utf-8').read())
+        json = self.task_init()
         self.entry5.delete(0, tkinter.END)
         self.set1.set(0)
         self.set2.set(0)
@@ -494,7 +510,7 @@ class DatePlan(tkinter.Tk):
         self.set4.set(0)
         self.entry6.delete(0, tkinter.END)
         self.button6.configure(text='选择音频文件（英文路径+英文名称）', bg='skyblue')
-        for n in range(1, len(json)+1):
+        for n in range(1, len(json)):
             self.events_obj[json[n]['time']] = json[n]
             self.listbox.insert(tkinter.END, json[n]['time'])
 
@@ -510,8 +526,8 @@ class DatePlan(tkinter.Tk):
                     text = f'计划任务来喽！现在的时间是：{self.year}年{self.month}月{self.day}日{self.hour}时{self.minute}分。'
                     if self.entry3.get():
                         text = self.entry3.get()
-                    all_data = eval(open(f'{os.path.dirname(os.path.realpath(sys.argv[0]))}\\task.json', 'r', encoding='utf-8').read().replace(' ', ''))
-                    for n in range(1, len(all_data)+1):
+                    all_data = self.task_init()
+                    for n in range(1, len(all_data)):
                         if all_data[n]['time'] == f'{self.year}-{self.month}-{self.day}-{self.hour}-{self.minute}':
                             del all_data[n]
                     data = {'time': f'{self.year}-{self.month}-{self.day}-{self.hour}-{self.minute}', 'task_msg': text, 'mon_con': self.mon.get(), 'yea_con': self.yea.get(),
@@ -530,10 +546,11 @@ class DatePlan(tkinter.Tk):
     def target(self):
         old = None
         while 1:
-            tasks = eval(open(f'{os.path.dirname(os.path.realpath(sys.argv[0]))}\\task.json', 'r', encoding='utf-8').read())
+            tasks = self.task_init()
             tasks_time_list = []
             for n in tasks:
-                tasks_time_list.append(tasks[n])
+                if n:
+                    tasks_time_list.append(tasks[n])
             tasks_time_list = sorted(tasks_time_list, key=lambda i: (i['time'], i['made_time']))
             if old != tasks:
                 old = tasks
@@ -546,16 +563,36 @@ class DatePlan(tkinter.Tk):
             time.sleep(30)
 
     @staticmethod
+    def task_init():
+        try:
+            task = eval(open(f'{os.path.dirname(os.path.realpath(sys.argv[0]))}\\task.json', 'r', encoding='utf-8').read())
+            if 0 not in task:
+                # temp = task
+                # task = {0: False}
+                # for i in temp:
+                #     task[i] = temp[i]
+                task = {k: v for k, v in ((0, False),) + tuple(task.items())}
+                open(f'{os.path.dirname(os.path.realpath(sys.argv[0]))}\\task.json', 'w', encoding='utf-8').write(str(task))
+            return task
+        except SyntaxError:
+            return {0: False}
+
+    @staticmethod
     def threads(t, *a, **k):
         thread = threading.Thread(target=t, args=a, kwargs=k)
         thread.daemon = True
         thread.start()
 
     def top(self):
+        # self.wm_attributes('-topmost', self.window.get())
+        all_data = self.task_init()
         if self.window.get():
             self.wm_attributes('-topmost', 1)
+            all_data[0] = True
         else:
             self.wm_attributes('-topmost', 0)
+            all_data[0] = False
+        open(f'{os.path.dirname(os.path.realpath(sys.argv[0]))}\\task.json', 'w', encoding='utf-8').write(str(all_data))
 
     def unmap(self, e):
         if self.flag:
@@ -586,9 +623,9 @@ class DatePlan(tkinter.Tk):
     def write(self):
         if self.index:
             now = time.localtime(time.time())
-            all_data = eval(open(f'{os.path.dirname(os.path.realpath(sys.argv[0]))}\\task.json', 'r', encoding='utf-8').read().replace(' ', ''))
+            all_data = self.task_init()
             text = self.entry5.get() and self.entry5.get() or '计划任务来喽！现在的时间是：{}年{}月{}日{}时{}分。'.format(*self.index.split('-'))
-            for n in range(1, len(all_data)+1):
+            for n in range(1, len(all_data)):
                 if all_data[n]['time'] == self.index:
                     all_data[n]['task_msg'] = text
                     all_data[n]['yea_con'] = self.set1.get()
@@ -604,7 +641,10 @@ class DatePlan(tkinter.Tk):
 
 if __name__ == '__main__':
     init = 0  # 清空计划任务标志变量
-    if not os.path.isfile(f'{os.path.dirname(os.path.realpath(sys.argv[0]))}\\task.json') or init:
-        open(f'{os.path.dirname(os.path.realpath(sys.argv[0]))}\\task.json', 'w', encoding='utf-8').write('{}')  # 清空计划任务 && 初始化文件
+    try:
+        if not os.path.isfile(f'{os.path.dirname(os.path.realpath(sys.argv[0]))}\\task.json') or init:
+            open(f'{os.path.dirname(os.path.realpath(sys.argv[0]))}\\task.json', 'w', encoding='utf-8').write('{0: False}')  # 清空计划任务 && 初始化文件
+    except SyntaxError:
+        open(f'{os.path.dirname(os.path.realpath(sys.argv[0]))}\\task.json', 'w', encoding='utf-8').write('{0: False}')  # 清空计划任务 && 初始化文件
     if not init:
         DatePlan()
