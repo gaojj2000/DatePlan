@@ -282,7 +282,7 @@ class DatePlan(tkinter.Tk):
         dic = self.task_init()
         now = time.localtime(time.time())
         for num in dic:
-            if num and '-'.join(dic[num]['time'].split('-')[:3]) == f'{now.tm_year}-{now.tm_mon}-{now.tm_mday}':
+            if num and ('-'.join(dic[num]['time'].split('-')[:3]) == f'{now.tm_year}-{now.tm_mon}-{now.tm_mday}' or dic[num]['daily']):
                 if not tkinter.messagebox.askyesno(title='提示', message='今天你有计划任务哦，是否继续关闭？'):
                     return
         self.destroy()
