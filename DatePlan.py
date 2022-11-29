@@ -1,12 +1,6 @@
 # _*_ coding:utf-8 _*_
-# Project: 
 # FileName: DatePlan.py
-# UserName: 高俊佶
-# ComputerUser：19305
-# Day: 2020/6/12
-# Time: 12:15
 # IDE: PyCharm
-# 最爱洪洪，永无BUG！
 
 import os
 import sys
